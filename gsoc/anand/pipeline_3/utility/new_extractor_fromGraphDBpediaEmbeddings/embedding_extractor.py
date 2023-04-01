@@ -1,6 +1,6 @@
 import json
 from tqdm import tqdm
-import os 
+import os
 index = open("index.csv").readlines()
 diction = {}
 missed_counter = 0
@@ -11,9 +11,7 @@ Loading the index information from the index.csv file.
 for line in tqdm(range(len(index))):
     index[line] = index[line].split('\t')
     key = index[line][0].strip()
-    diction[key] = {}
-    diction[key]['file'] = index[line][1]
-    diction[key]['line'] = index[line][2].strip()
+    diction[key] = {'file': index[line][1], 'line': index[line][2].strip()}
 """ 
 This part of the code creates the a json file containing the information which can be loaded easily.
 """
@@ -22,13 +20,9 @@ with open("data_file.json", "w") as write_file:
     json.dump(diction, write_file) 
 """
 
-file_diction = {}
+a = list(os.listdir("data_fragments"))
 
-a = [f for f in os.listdir("data_fragments")]
-
-for val in (a):
-    file_diction[val.strip()] = []
-
+file_diction = {val.strip(): [] for val in a}
 vocab = open("vocab.sparql",'r').readlines()
 filename = []
 dict_keys = diction.keys()
@@ -50,10 +44,11 @@ Loading information from the broken files to extract the required embeddings.
 """)
 accum = []
 for files in tqdm(a): 
-    file_reader = open("data_fragments/"+files).readlines()
-    for words_in_file in file_diction[files.strip()]:
-        accum.append(file_reader[int(words_in_file["line"].strip())].strip()) 
-
+    file_reader = open(f"data_fragments/{files}").readlines()
+    accum.extend(
+        file_reader[int(words_in_file["line"].strip())].strip()
+        for words_in_file in file_diction[files.strip()]
+    )
 print(""" 
 Writing the extracted embeddings in a file for future use. 
 """)
@@ -62,7 +57,7 @@ final = final.replace("http://dbpedia.org/resource/","dbr_")
 final = final.replace("http://dbpedia.org/ontology/","dbo_")
 open("new_vocbulary.csv",'w').write(final)
 
-print("Missed words: "+str(missed_counter))
+print(f"Missed words: {str(missed_counter)}")
 
 
 

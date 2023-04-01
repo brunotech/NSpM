@@ -34,10 +34,10 @@ def log_statistics( used_resources, special_classes, not_instanced_templates ):
     for usage in examples_per_instance:
         logging.info('{:6d} resources occur \t{:6d} times \t({:6.2f} %) '.format(examples_per_instance[usage], usage, examples_per_instance[usage]*100/total_number_of_resources))
     for cl in special_classes:
-        logging.info('{} contains: {}'.format(cl, ', '.join(special_classes[cl])))
+        logging.info(f"{cl} contains: {', '.join(special_classes[cl])}")
     logging.info('{:6d} not instanciated templates:'.format(sum(not_instanced_templates.values())))
     for template in not_instanced_templates:
-        logging.info('{}'.format(template))
+        logging.info(f'{template}')
 
 
 def save_cache ( file, cache ):
@@ -46,16 +46,17 @@ def save_cache ( file, cache ):
         json.dump(ordered, outfile)
 
 def query_dbpedia( query ):
-    param = dict()
-    param["default-graph-uri"] = GRAPH
-    param["query"] = query
-    param["format"] = "JSON"
-    param["CXML_redir_for_subjs"] = "121"
-    param["CXML_redir_for_hrefs"] = ""
-    param["timeout"] = "600" 
-    param["debug"] = "on"
+    param = {
+        "default-graph-uri": GRAPH,
+        "query": query,
+        "format": "JSON",
+        "CXML_redir_for_subjs": "121",
+        "CXML_redir_for_hrefs": "",
+        "timeout": "600",
+        "debug": "on",
+    }
     try:
-        resp = urllib.request.urlopen(ENDPOINT + "?" + urllib.parse.urlencode(param))
+        resp = urllib.request.urlopen(f"{ENDPOINT}?{urllib.parse.urlencode(param)}")
         j = resp.read()
         resp.close()
     except (urllib.error.HTTPError, http.client.BadStatusLine):
@@ -121,13 +122,11 @@ STANDARDS = {
 def encode( sparql ):
     encoded_sparql = do_replacements(sparql)
     shorter_encoded_sparql = shorten_query(encoded_sparql)
-    normalized = normalize_predicates(shorter_encoded_sparql)
-    return normalized
+    return normalize_predicates(shorter_encoded_sparql)
 
-def decode ( encoded_sparql ):
+def decode( encoded_sparql ):
     short_sparql = reverse_replacements(encoded_sparql)
-    sparql = reverse_shorten_query(short_sparql)
-    return sparql
+    return reverse_shorten_query(short_sparql)
 
 
 def normalize_predicates( sparql ):
@@ -170,7 +169,7 @@ def reverse_shorten_query( sparql ):
 
 
 def read_template_file(file):
-    annotations = list()
+    annotations = []
     line_number = 1
     with open(file) as f:
         for line in f:
@@ -199,18 +198,16 @@ class Annotation:
 def extract_variables(query):
     variables = []
     query_form_pattern = r'^.*?where'
-    query_form_match = re.search(query_form_pattern, query, re.IGNORECASE)
-    if query_form_match:
+    if query_form_match := re.search(query_form_pattern, query, re.IGNORECASE):
         letter_pattern = r'\?(\w)'
-        variables = re.findall(letter_pattern, query_form_match.group(0))
+        variables = re.findall(letter_pattern, query_form_match[0])
     return variables
 
 
 def extract_encoded_entities( encoded_sparql ):
     sparql = decode(encoded_sparql)
     entities = extract_entities(sparql)
-    encoded_entities = list(map(encode, entities))
-    return encoded_entities
+    return list(map(encode, entities))
 
 
 def extract_entities( sparql ):
@@ -225,28 +222,25 @@ def extract_entities( sparql ):
 
 def extract_predicates( sparql ):
     triples = extractTriples(sparql)
-    predicates = set()
-    for triple in triples:
-        pred = triple['predicate']
-        predicates.add(pred)
-    return predicates
+    return {triple['predicate'] for triple in triples}
 
 
-def extractTriples (sparqlQuery):
+def extractTriples(sparqlQuery):
     triples = []
     whereStatementPattern = r'where\s*?{(.*?)}'
-    whereStatementMatch = re.search(whereStatementPattern, sparqlQuery, re.IGNORECASE)
-    if whereStatementMatch:
-        whereStatement = whereStatementMatch.group(1)
+    if whereStatementMatch := re.search(
+        whereStatementPattern, sparqlQuery, re.IGNORECASE
+    ):
+        whereStatement = whereStatementMatch[1]
         triples = splitIntoTriples(whereStatement)
     return triples
 
 
-def splitIntoTriples (whereStatement):
+def splitIntoTriples(whereStatement):
     tripleAndSeparators = re.split(r'(\.[\s\?\<$])', whereStatement)
     trimmed = [str.strip() for str in tripleAndSeparators]
 
-    def repair (list, element):
+    def repair(list, element):
         if element not in ['.', '.?', '.<']:
             previousElement = list[-1]
             del list[-1]
@@ -254,7 +248,7 @@ def splitIntoTriples (whereStatement):
                 cutoff = previousElement[1] if previousElement in ['.?', '.<'] else ''
                 list.append(cutoff + element)
             else:
-                list.append(previousElement + ' ' + element)
+                list.append(f'{previousElement} {element}')
         else:
             list.append(element)
 
@@ -266,15 +260,13 @@ def splitIntoTriples (whereStatement):
     return triples
 
 
-def splitIntoTripleParts (triple):
+def splitIntoTripleParts(triple):
     statementPattern = r'(\S+)\s+(\S+)\s+(\S+)'
-    statementPatternMatch = re.search(statementPattern, triple)
-
-    if statementPatternMatch:
+    if statementPatternMatch := re.search(statementPattern, triple):
         return {
-            'subject': statementPatternMatch.group(1),
-            'predicate': statementPatternMatch.group(2),
-            'object': statementPatternMatch.group(3)
+            'subject': statementPatternMatch[1],
+            'predicate': statementPatternMatch[2],
+            'object': statementPatternMatch[3],
         }
     else:
         return None

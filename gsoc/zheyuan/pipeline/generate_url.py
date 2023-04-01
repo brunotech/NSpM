@@ -12,8 +12,7 @@ def get_url(url):
         page link for the given http://mappings.dbpedia.org/index.php/OntologyClass:<some entity>"""
         page = urllib.request.urlopen(url)
         soup = BeautifulSoup(page, "html.parser")
-        link = soup.findAll('a', attrs={"rel": "nofollow"})[0]['href']
-        return link
+        return soup.findAll('a', attrs={"rel": "nofollow"})[0]['href']
 
 
 def generate_url(given_label):
@@ -27,9 +26,9 @@ def generate_url(given_label):
         count = 0
 
         for onto in jsondoc['rdf:RDF'].keys():
-                if(not (onto == 'owl:Class')):
+                if onto != 'owl:Class':
                         continue
-                for val in ((jsondoc['rdf:RDF'][onto])):
+                for val in jsondoc['rdf:RDF'][onto]:
                         count += 1
                         about = val['@rdf:about']
                         label = ""
@@ -37,16 +36,9 @@ def generate_url(given_label):
                                 if(lang['@xml:lang'] == 'en'):
                                         # print("Label: "+lang['#text'])
                                         label = lang['#text']
-                        if(type(val['rdfs:subClassOf']) == list):
-                                for subcl in val['rdfs:subClassOf']:
-                                        #print("Sub-class of: "+subcl['@rdf:resource'])
-                                        pass
-                        elif(type(val['rdfs:subClassOf']) != "list"):
-                                        #print("Sub-class of: "+val['rdfs:subClassOf']['@rdf:resource'])
-                                        pass
-                        url = val['prov:wasDerivedFrom']['@rdf:resource']
-                        # print("URL:" + get_url(url))
-                        if(given_label == val['@rdf:about'].split('http://dbpedia.org/ontology/')[-1]):
+                        if (given_label == about.split(
+                            'http://dbpedia.org/ontology/')[-1]):
+                                url = val['prov:wasDerivedFrom']['@rdf:resource']
                                 return [get_url(url),about]
         return ["None","None"]
 
@@ -65,15 +57,14 @@ if __name__ == "__main__":
         args = parser.parse_args()
         label = args.label
         print(generate_url(label))
-        pass
 
 def generate_url_spec(given_label):
         xmldoc = open('../utility/dbpedia.owl', encoding="utf-8").read()
         jsondoc = ((xmltodict.parse(xmldoc)))
         for onto in jsondoc['rdf:RDF'].keys():
-                if(not (onto == 'owl:DatatypeProperty' or onto == "owl:ObjectProperty")):
+                if onto not in ['owl:DatatypeProperty', "owl:ObjectProperty"]:
                         continue
-                for val in ((jsondoc['rdf:RDF'][onto])):
+                for val in jsondoc['rdf:RDF'][onto]:
                         wiki_number = "None"
                         try:
                                 for value in val['owl:equivalentClass']['@rdf:resource']:
@@ -88,15 +79,14 @@ def generate_url_spec(given_label):
                                 derived = "None"
                         label = ""
                         try:
-                                if(type(val['rdfs:label']) == list):
+                                if (type(val['rdfs:label']) == list):
                                         for lang in (val['rdfs:label']):
                                                 if(lang['@xml:lang'] == 'en'):
                                                         # print("Label: "+lang['#text'])
                                                         label = lang['#text']
-                                elif(type(val['rdfs:label']) != "list"):
-                                                lang = dict(val['rdfs:label'])
-                                                label = lang['#text']
-                                                pass
+                                elif (type(val['rdfs:label']) != "list"):
+                                        lang = dict(val['rdfs:label'])
+                                        label = lang['#text']
                                 if(given_label == val['@rdf:about'].split('http://dbpedia.org/ontology/')[-1]):
                                         return [val['@rdf:about'],derived,wiki_number]
                         except:

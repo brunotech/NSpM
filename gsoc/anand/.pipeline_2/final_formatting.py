@@ -11,14 +11,13 @@ from sparql_generator import sparql_generator
 
 def final_formatting(input_file, uri_file, url, output_file, project_name, namespace,rs):
 	
-	if (int(rs) == 1) :
-		open_files = open(input_file, 'r')
-		lines = open_files.readlines()
-		open_files.close()
+	if (int(rs) == 1):
+		with open(input_file, 'r') as open_files:
+			lines = open_files.readlines()
 	else:
 		lines = sparql_generator(input_file=input_file, project_name=project_name,
 									url=url, uri_file=uri_file, namespace=namespace)
-	
+
 	fl = 1
 
 	output = ""
@@ -40,10 +39,7 @@ def final_formatting(input_file, uri_file, url, output_file, project_name, names
 
 		newl, to_remove = [], []
 		name = url.split("/")[-1]
-		newl.append("dbo:"+name)
-		newl.append("")
-		newl.append("")
-
+		newl.extend((f"dbo:{name}", "", ""))
 		nlq = l[7].split()
 		# The fuzzy score column is not present in the
 		# autmatically created csv file.
@@ -80,14 +76,11 @@ def final_formatting(input_file, uri_file, url, output_file, project_name, names
 			if '<' not in gq[i] and '?' not in gq[i] and '[' not in gq[i]:
 				gq[i] = gq[i].lower()
 
-		newl.append(" ".join(nlq))
-		newl.append(" ".join(spq))
-		newl.append(" ".join(gq))
+		newl.extend((" ".join(nlq), " ".join(spq), " ".join(gq)))
 		output += ";".join(newl) + "\n"
 
-	fw = open(project_name+"/"+ output_file, 'w')
-	fw.write(output)
-	fw.close()
+	with open(f"{project_name}/{output_file}", 'w') as fw:
+		fw.write(output)
 
 
 if __name__ == "__main__":
@@ -121,4 +114,3 @@ if __name__ == "__main__":
 	project_name = args.project_name
 	final_formatting(input_file=input_file, uri_file=uri_file, url=url,
 						output_file=output_file, project_name=project_name, namespace=namespace, rs= rs)
-	pass

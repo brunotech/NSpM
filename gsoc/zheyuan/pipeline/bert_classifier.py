@@ -39,8 +39,6 @@ def encode(test_set, tokenizer):
 def predict(device, test_set, model, tokenizer):
     input_ids, attention_masks = encode(test_set, tokenizer)
     model.eval()
-    # Tracking variables
-    predictions = []
     # Add batch to GPU
     b_input_ids = input_ids.to(device)
     b_input_mask = attention_masks.to(device)
@@ -53,15 +51,12 @@ def predict(device, test_set, model, tokenizer):
     logits = outputs[0]
     # Move logits and labels to CPU
     logits = logits.detach().cpu().numpy()
-    # Store predictions and true labels
-    predictions.append(logits)
-    pred_labels = []
+    predictions = [logits]
     print(predictions)
-    for i in range(len(predictions[0])):
-        # get the highest score of logits to be the class
-        # the result will be 0,1,2 so it should be -1
-        pred_labels.append(np.argmax(predictions[0][i]).flatten()[0]-1)
-    return pred_labels
+    return [
+        np.argmax(predictions[0][i]).flatten()[0] - 1
+        for i in range(len(predictions[0]))
+    ]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

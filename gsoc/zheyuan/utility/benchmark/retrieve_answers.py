@@ -10,8 +10,7 @@ def read_sparqls():
     sparqls = []
     file_path = "../gsoc/zheyuan/utility/benchmark/output_decoded1.txt"
     with open(file_path, 'r') as lines:
-        for line in lines:
-            sparqls.append(line)
+        sparqls.extend(iter(lines))
     return sparqls
 
 def retrieve(query):
@@ -19,7 +18,7 @@ def retrieve(query):
         query = urllib.parse.quote_plus(query)
     except:  # python2
         query = urllib.quote_plus(query)
-    url = "https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=" + query + "&format=text%2Fhtml&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+"
+    url = f"https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query={query}&format=text%2Fhtml&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+"
     page = urllib.request.urlopen(url)
     soup = BeautifulSoup(page, "html.parser")
     total = len(soup.find_all("tr"))
@@ -60,14 +59,7 @@ def retrieve(query):
         if answer_dict["results"]["bindings"]:
             answers.append(answer_dict)
 
-    if not answers:
-        return [{
-                  "head" : {
-                    "vars" : [ "date" ]
-                  },
-                  "results" : { }
-                }]
-    return answers
+    return answers or [{"head": {"vars": ["date"]}, "results": {}}]
 
 
 if __name__ == "__main__":
@@ -93,6 +85,3 @@ if __name__ == "__main__":
              answer_groups.append(answer_group)
 
     print(len(answer_groups), answer_groups)
-
-
-    pass

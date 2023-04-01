@@ -9,6 +9,7 @@ https://arxiv.org/abs/1708.07624
 Version 1.0.0
 
 """
+
 import argparse
 import collections
 import json
@@ -49,20 +50,20 @@ if __name__ == '__main__':
 
     valid_lines = []
     filtered_queries = []
-    with open(dataset_root+'.sparql', 'r') as sparql_file:
+    with open(f'{dataset_root}.sparql', 'r') as sparql_file:
         for linenumber, line in enumerate(sparql_file):
             entities = extract_encoded_entities(line)
-            valid = COMP(list(map(check, entities)))
-            if valid:
+            if valid := COMP(list(map(check, entities))):
                 filtered_queries.append(line)
                 valid_lines.append(linenumber)
 
     filtered_questions = []
-    with open(dataset_root+'.en', 'r') as en_file:
-        for linenumber, line in enumerate(en_file):
-            if linenumber in valid_lines:
-                filtered_questions.append(line)
-
+    with open(f'{dataset_root}.en', 'r') as en_file:
+        filtered_questions.extend(
+            line
+            for linenumber, line in enumerate(en_file)
+            if linenumber in valid_lines
+        )
     with open(filtered_en_file, 'w') as filtered:
         filtered.writelines(filtered_questions)
 

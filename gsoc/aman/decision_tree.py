@@ -18,13 +18,10 @@ for line in lines:
 	line = line.strip().split(',')
 	rng = line[2].lower()
 	lbl = line[1]
-	if 'person' in rng:
-		rng = "who"
-	else:
-		rng = "what"
-	line[7] = rng + " is the " + lbl + " of <X>"
-	line[8] = rng + " is the " + lbl + " of <X>"
-	mve += rng + " is the " + lbl + " of <X>\n"
+	rng = "who" if 'person' in rng else "what"
+	line[7] = f"{rng} is the {lbl} of <X>"
+	line[8] = f"{rng} is the {lbl} of <X>"
+	mve += f"{rng} is the {lbl}" + " of <X>\n"
 	final_lines.append(",".join(line));
 
 

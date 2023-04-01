@@ -6,15 +6,14 @@ from tqdm import tqdm
 
 def range_place(input_file, project_name, output_file="test_res.csv", url="Use a valid URL", uri_file="Proper URI file", namespace="Valid namespace"):
     if __name__ == "__main__":
-        f = open(input_file, 'r')
-        lines = f.readlines()
-        f.close()
+        with open(input_file, 'r') as f:
+            lines = f.readlines()
         print ("hello")
-    if not __name__ == "__main__":
+    if __name__ != "__main__":
         lines = sparql_generator(input_file=input_file, project_name=project_name,
                                     url=url, uri_file=uri_file, namespace=namespace)
 
-    output_file_write = open(project_name+"/" + output_file, 'w')
+    output_file_write = open(f"{project_name}/{output_file}", 'w')
     name = url.split("/")[-1]
     accum = []
     for l in tqdm(lines):
@@ -25,9 +24,7 @@ def range_place(input_file, project_name, output_file="test_res.csv", url="Use a
             continue
         if name.lower() in l[2].lower() and l[5] != '':
             newl, to_remove = [], []
-            newl.append("dbo:"+name)
-            newl.append("")
-            newl.append("")
+            newl.extend((f"dbo:{name}", "", ""))
             nlq = l[7].split()
             for i in range(len(nlq)):
                 if '(' in nlq[i] or ')' in nlq[i]:
@@ -58,9 +55,7 @@ def range_place(input_file, project_name, output_file="test_res.csv", url="Use a
             nlq = nlq.replace('<X>', '<A>')
             spq = spq.replace('?x', '?a').replace('<X>', '<A>')
             gq = gq.replace('?x', '?a').replace('<X>', '<A>')
-            newl.append((nlq))
-            newl.append((spq))
-            newl.append((gq))
+            newl.extend((nlq, spq, gq))
             accum.append(";".join(newl))
     output_file_write.write("\n".join(accum))
     return [lines,output_file_write]

@@ -17,16 +17,14 @@ How was the tsv file created in the first place?
 
 def integrate(namespace,  uri_file, output_file="integrate.csv", project_name="test_project", url="Enter a valid URL", input_file="Pleaes enter a valid file name"):
 	print("Reading the TSV file: ")
-	open_tsv = open(uri_file, 'r')
-	read_tsv = open_tsv.readlines()
-	diction = {}
-	for line in tqdm(read_tsv):
-		line = line.strip().split('\t')
-		if line[0].split('/')[-2] != namespace:
-			continue
-		diction[line[0].split('/')[-1]] = line[1]
-
-	open_tsv.close()
+	with open(uri_file, 'r') as open_tsv:
+		read_tsv = open_tsv.readlines()
+		diction = {}
+		for line in tqdm(read_tsv):
+			line = line.strip().split('\t')
+			if line[0].split('/')[-2] != namespace:
+				continue
+			diction[line[0].split('/')[-1]] = line[1]
 
 	"""
 	Processing the input file. 
@@ -42,14 +40,14 @@ def integrate(namespace,  uri_file, output_file="integrate.csv", project_name="t
 		adding a new line character and then going for the next 
 		iteration after adding it to a variable final (string addition)
 	"""
-	
+
 
 	if (__name__ == "__main__"):
 		print("Reading the input file: ")
 		open_inp = open(input_file, 'r')
 		line_inp = open_inp.readlines()
 
-	if (not __name__ == "__main__"):
+	if __name__ != "__main__":
 		line_inp = get_properties(url=url, output_file="get_properties.csv", project_name =  project_name)
 
 	cnt, tot = 0, 0
@@ -64,7 +62,7 @@ def integrate(namespace,  uri_file, output_file="integrate.csv", project_name="t
 		# 	print "lol", m
 		if in_line in diction:
 			cnt += 1
-			line.append("http://dbpedia.org/" + namespace + "/" + in_line)
+			line.append(f"http://dbpedia.org/{namespace}/{in_line}")
 			line.append(diction[in_line])
 		else:
 
@@ -81,36 +79,40 @@ def integrate(namespace,  uri_file, output_file="integrate.csv", project_name="t
 	as given in the command line argument.
 	"""
 	# print final
-	f = open(project_name+"/"+output_file, 'w')
+	f = open(f"{project_name}/{output_file}", 'w')
 	f.write(final)
 	print("**************************************")
-	print("Total number of entity whose URI was found: "+str(cnt) +
-			"\nTotal number of entities present: " + str(tot))
+	print(
+		(
+			f"Total number of entity whose URI was found: {str(cnt)}"
+			+ "\nTotal number of entities present: "
+		)
+		+ str(tot)
+	)
 	return accum
 
 
 if __name__ == "__main__":
-    """
+	"""
     Section to parse the command line arguments.
     """
-    parser = argparse.ArgumentParser()
-    requiredNamed = parser.add_argument_group('Required Arguments')
-    requiredNamed.add_argument(
-        '--namespace', dest='ns', metavar='ns', help='eg: "ontology"', required=True)
-    requiredNamed.add_argument('--input_file', dest='inp', metavar='inp',
-                               help='Output from previous step', required=True)
-    requiredNamed.add_argument('--uri_file', dest='uri', metavar='uri',
-                               help='eg: File which contains uri and number of occurrences of properties', required=True)
-    requiredNamed.add_argument('--output_file', dest='out', metavar='out',
-                               help='File in which you want to store output', required=True)
-    requiredNamed.add_argument('--project_name', dest='project_name',
-                               metavar='project_name', help='test', required=True)
-    args = parser.parse_args()
-    namespace = args.ns
-    input_file = args.inp
-    uri_file = args.uri
-    output_file = args.out
-    project_name = args.project_name
-    integrate(namespace,  uri_file, output_file,
-              project_name, "Enter a valid URL", input_file)
-    pass
+	parser = argparse.ArgumentParser()
+	requiredNamed = parser.add_argument_group('Required Arguments')
+	requiredNamed.add_argument(
+	    '--namespace', dest='ns', metavar='ns', help='eg: "ontology"', required=True)
+	requiredNamed.add_argument('--input_file', dest='inp', metavar='inp',
+	                           help='Output from previous step', required=True)
+	requiredNamed.add_argument('--uri_file', dest='uri', metavar='uri',
+	                           help='eg: File which contains uri and number of occurrences of properties', required=True)
+	requiredNamed.add_argument('--output_file', dest='out', metavar='out',
+	                           help='File in which you want to store output', required=True)
+	requiredNamed.add_argument('--project_name', dest='project_name',
+	                           metavar='project_name', help='test', required=True)
+	args = parser.parse_args()
+	namespace = args.ns
+	input_file = args.inp
+	uri_file = args.uri
+	output_file = args.out
+	project_name = args.project_name
+	integrate(namespace,  uri_file, output_file,
+	          project_name, "Enter a valid URL", input_file)

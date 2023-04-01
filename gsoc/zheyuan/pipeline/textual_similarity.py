@@ -18,11 +18,10 @@ embed = hub.load(const.MODULE_URL)
 
 def similarities(sentence, paraphrases):
     vectors = embed([sentence] + paraphrases)
-    cosine_similarities = []
-    for v2 in vectors[1:]:
-        cosine_similarities.append(cosine_similarity(np.array(vectors[0]), np.array(v2)))
-
-    return cosine_similarities
+    return [
+        cosine_similarity(np.array(vectors[0]), np.array(v2))
+        for v2 in vectors[1:]
+    ]
 
 def similarity(sentence,paraphrase):
     vectors = embed([sentence, paraphrase])
@@ -40,16 +39,13 @@ def cosine_similarity(v1, v2):
     # Calculate semantic similarity between two sentence vectors
     mag1 = np.linalg.norm(v1)
     mag2 = np.linalg.norm(v2)
-    if (not mag1) or (not mag2):
-        return 0
-    return np.dot(v1, v2) / (mag1 * mag2)
+    return 0 if (not mag1) or (not mag2) else np.dot(v1, v2) / (mag1 * mag2)
 
 
 def prof_similarity(v1, v2):
     #Calculate the semantic similarity based on the angular distance
     cosine = cosine_similarity(v1, v2)
-    prof_similarity = 1 - math.acos(cosine) / math.pi
-    return prof_similarity
+    return 1 - math.acos(cosine) / math.pi
 
 def minDistance(s1, s2):
     """
@@ -70,7 +66,7 @@ def minDistance(s1, s2):
             elif j > 0 and i > 0:
                 res1 = dp[i - 1][j] + 1
                 res2 = dp[i][j - 1] + 1
-                res3 = not s1[i - 1] == s2[j - 1] and dp[i - 1][j - 1] + 1 or dp[i - 1][j - 1]
+                res3 = s1[i - 1] != s2[j - 1] and dp[i - 1][j - 1] + 1 or dp[i - 1][j - 1]
                 dp[i][j] = min(res1, res2, res3)
     return dp[len1][len2]
 
@@ -117,4 +113,3 @@ if __name__=="__main__":
     s1 = args.sentence1
     s2 = args.sentence2
     print("cosine similarity:", similarity(s1, s2), "Edit distance: ", edit_distance(s1,s2))
-    pass

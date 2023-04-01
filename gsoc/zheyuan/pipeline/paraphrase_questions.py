@@ -23,8 +23,8 @@ def get_pretrained_model(zip_file_url):
     @return: folder_path: path to store the pre-trained model
     """
     model_name = zip_file_url.split("/")[-1].replace(".zip", "")
-    folder_path = './{}'.format(model_name)
-    print('Getting pretained model {}'.format(model_name))
+    folder_path = f'./{model_name}'
+    print(f'Getting pretained model {model_name}')
 
     if not os.path.exists(folder_path):
         os.system("curl --output ./t5_paraphraser.zip https://datascience-models-ramsri.s3.amazonaws.com/t5_paraphraser.zip")
@@ -35,7 +35,7 @@ def get_pretrained_model(zip_file_url):
     else:
         print("Folder available: ", folder_path)
 
-    print('Finish {}'.format(model_name))
+    print(f'Finish {model_name}')
     return folder_path
 
 def prepare_model(folder_path):
@@ -69,7 +69,7 @@ def paraphrase_questions(tokenizer, device, model, sentence):
     """
     sentence = sentence.replace("<A>", "XYZ")
 
-    text = "paraphrase: " + sentence + " </s>"
+    text = f"paraphrase: {sentence} </s>"
 
     max_len = 256
 
@@ -112,7 +112,7 @@ def pick_final_sentence(origin, candidates):
     final_sentence = ""
     similarity_arr = similarities(origin, candidates)
     for i, final_output in enumerate(candidates):
-        print("{}: {}".format(i, final_output))
+        print(f"{i}: {final_output}")
         cos = similarity_arr[i]
         print(cos)
         if cos > 0.7 and cos<1:
@@ -136,9 +136,7 @@ def pick_final_sentence_advanced( device, origin, candidates, model_dir=None):
     """
     if model_dir:
         model, tokenizer = load_model(model_dir, device)
-        text_pairs = []
-        for candidate in candidates:
-            text_pairs.append([origin, candidate])
+        text_pairs = [[origin, candidate] for candidate in candidates]
         pred_labels = predict(device, text_pairs, model, tokenizer)
 
 
@@ -150,7 +148,7 @@ def pick_final_sentence_advanced( device, origin, candidates, model_dir=None):
 
     for i, final_output in enumerate(candidates):
 
-        print("{}: {}".format(i, final_output))
+        print(f"{i}: {final_output}")
         cos = similarity_arr[i]
         print(cos)
 
@@ -193,4 +191,3 @@ if __name__ == "__main__":
     set_seed(42)
     tokenizer, device, model = prepare_model(folder_path)
     print(paraphrase_questions(tokenizer,device,model,sentence))
-    pass

@@ -46,7 +46,7 @@ def evaluate(sentence):
 
     predicted_id = tf.argmax(predictions[0]).numpy()
 
-    result += targ_lang.index_word[predicted_id] + ' '
+    result += f'{targ_lang.index_word[predicted_id]} '
 
     if targ_lang.index_word[predicted_id] == '<end>':
       return result, sentence, attention_plot
@@ -57,17 +57,16 @@ def evaluate(sentence):
   return result, sentence, attention_plot
 
 def mkdir_p(mypath):
-    '''Creates a directory. equivalent to using mkdir -p on the command line'''
+  '''Creates a directory. equivalent to using mkdir -p on the command line'''
 
-    from errno import EEXIST
-    from os import makedirs,path
+  from errno import EEXIST
+  from os import makedirs,path
 
-    try:
-        makedirs(mypath)
-    except OSError as exc: # Python >2.5
-        if exc.errno == EEXIST and path.isdir(mypath):
-            pass
-        else: raise
+  try:
+    makedirs(mypath)
+  except OSError as exc: # Python >2.5
+    if exc.errno != EEXIST or not path.isdir(mypath):
+      raise
 
 def plot_attention(attention, sentence, predicted_sentence,ou_dir):
   fig = plt.figure(figsize=(10,10))
@@ -85,14 +84,14 @@ def plot_attention(attention, sentence, predicted_sentence,ou_dir):
   plt.show()
   fig = plt.figure()
   mkdir_p(ou_dir)
-  fig.savefig('{}/graph.png'.format(ou_dir))
+  fig.savefig(f'{ou_dir}/graph.png')
 
 
 def translate(sentence,ou_dir):
   result, sentence, attention_plot = evaluate(sentence)
 
-  print('Input: %s' % (sentence))
-  print('Predicted translation: {}'.format(result))
+  print(f'Input: {sentence}')
+  print(f'Predicted translation: {result}')
 
   attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
   plot_attention(attention_plot, sentence.split(' '), result.split(' '),ou_dir)
@@ -109,91 +108,88 @@ def install_model(url):
 
 
 def locate_model(url):
-    install_model(url)
-    output = airML.locate(url, format='nspm')
-    output = json.loads(output)
-    if output['status_code'] == 200:
-        print(output['message'])
-        model_dir = output['results'][0]
-        return model_dir
-    else:
-        raise Exception(output['message'])
+  install_model(url)
+  output = airML.locate(url, format='nspm')
+  output = json.loads(output)
+  if output['status_code'] != 200:
+    raise Exception(output['message'])
+  print(output['message'])
+  return output['results'][0]
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    requiredNamed = parser.add_argument_group('required named arguments')
-    requiredNamed.add_argument(
-        '--input', dest='input', metavar='inputDirectory', help='dataset directory', required=False)
-    requiredNamed.add_argument(
-        '--airml', dest='airml', metavar='airmlURL', help='name of the knowledge base', required=False)
-    requiredNamed.add_argument(
-        '--output', dest='output', metavar='outputDirectory', help='dataset directory', required=True)
-    requiredNamed.add_argument(
-        '--inputstr', dest='inputstr', metavar='inputString', help='Input string for translation', required=False)
+  parser = argparse.ArgumentParser()
+  requiredNamed = parser.add_argument_group('required named arguments')
+  requiredNamed.add_argument(
+      '--input', dest='input', metavar='inputDirectory', help='dataset directory', required=False)
+  requiredNamed.add_argument(
+      '--airml', dest='airml', metavar='airmlURL', help='name of the knowledge base', required=False)
+  requiredNamed.add_argument(
+      '--output', dest='output', metavar='outputDirectory', help='dataset directory', required=True)
+  requiredNamed.add_argument(
+      '--inputstr', dest='inputstr', metavar='inputString', help='Input string for translation', required=False)
 
-    args = parser.parse_args()
-    inputs = args.inputstr
-    model_dir = None
-    input_dir = None
-    if args.input is not None:
-        model_dir = args.input
-        input_dir = args.input
-    elif args.airml is not None:
-        airml_url = args.airml
-        model_dir = locate_model(airml_url)
-        input_dir = model_dir
-    else:
-        print('--input or --airml argument should be provided to load the model.')
-        sys.exit()
+  args = parser.parse_args()
+  inputs = args.inputstr
+  model_dir = None
+  input_dir = None
+  if args.input is not None:
+      model_dir = args.input
+      input_dir = args.input
+  elif args.airml is not None:
+      airml_url = args.airml
+      model_dir = locate_model(airml_url)
+      input_dir = model_dir
+  else:
+      print('--input or --airml argument should be provided to load the model.')
+      sys.exit()
 
-    model_dir += '/training_checkpoints'
-    pic_dir = input_dir + '/pickle_objects'
+  model_dir += '/training_checkpoints'
+  pic_dir = f'{input_dir}/pickle_objects'
 
-    embedding_dim = 256
-    units = 1024
-
-
-    with open(pic_dir+'/input_tensor.pickle', 'rb') as f:
-	    input_tensor=pickle.load(f)
-    with open(pic_dir+'/target_tensor.pickle', 'rb') as f:
-	    target_tensor=pickle.load(f)
-    with open(pic_dir+'/inp_lang.pickle', 'rb') as f:
-	    inp_lang=pickle.load(f)
-    with open(pic_dir+'/targ_lang.pickle', 'rb') as f:
-	    targ_lang=pickle.load(f)
-    with open(pic_dir+'/BATCH_SIZE.pickle', 'rb') as f:
-	    BATCH_SIZE=pickle.load(f)
-
-    # Calculate max_length of the target tensors
-    max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
-
-    vocab_inp_size = len(inp_lang.word_index)+1
-    vocab_tar_size = len(targ_lang.word_index)+1
+  embedding_dim = 256
+  units = 1024
 
 
-    encoder = Encoder(vocab_inp_size, embedding_dim, units, BATCH_SIZE)
-    decoder = Decoder(vocab_tar_size, embedding_dim, units, BATCH_SIZE)
+  with open(f'{pic_dir}/input_tensor.pickle', 'rb') as f:
+    input_tensor=pickle.load(f)
+  with open(f'{pic_dir}/target_tensor.pickle', 'rb') as f:
+    target_tensor=pickle.load(f)
+  with open(f'{pic_dir}/inp_lang.pickle', 'rb') as f:
+    inp_lang=pickle.load(f)
+  with open(f'{pic_dir}/targ_lang.pickle', 'rb') as f:
+    targ_lang=pickle.load(f)
+  with open(f'{pic_dir}/BATCH_SIZE.pickle', 'rb') as f:
+    BATCH_SIZE=pickle.load(f)
 
-    optimizer = tf.keras.optimizers.Adam()
-    checkpoint = tf.train.Checkpoint(optimizer=optimizer,
-                                 encoder=encoder,
-                                 decoder=decoder)
+  # Calculate max_length of the target tensors
+  max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
+
+  vocab_inp_size = len(inp_lang.word_index)+1
+  vocab_tar_size = len(targ_lang.word_index)+1
 
 
-    checkpoint.restore(tf.train.latest_checkpoint(model_dir))
+  encoder = Encoder(vocab_inp_size, embedding_dim, units, BATCH_SIZE)
+  decoder = Decoder(vocab_tar_size, embedding_dim, units, BATCH_SIZE)
+
+  optimizer = tf.keras.optimizers.Adam()
+  checkpoint = tf.train.Checkpoint(optimizer=optimizer,
+                               encoder=encoder,
+                               decoder=decoder)
 
 
-    finaltrans = "input qurey : \n"
-    finaltrans += inputs
-    finaltrans += "\n \n \n output qurey : \n"
-    finaltranso = translate(inputs,input_dir)
-    finaltrans += finaltranso
-    finaltrans += '\n \n \n output query decoded : \n'
-    finaltranso = decode(finaltranso)
-    finaltranso = fix_URI(finaltranso)
-    print('Decoded translation: {}'.format(finaltranso))
-    finaltrans += finaltranso
-    outputfile = open((input_dir+'/output_query.txt'),'w',encoding="utf8")
+  checkpoint.restore(tf.train.latest_checkpoint(model_dir))
+
+
+  finaltrans = "input qurey : \n"
+  finaltrans += inputs
+  finaltrans += "\n \n \n output qurey : \n"
+  finaltranso = translate(inputs,input_dir)
+  finaltrans += finaltranso
+  finaltrans += '\n \n \n output query decoded : \n'
+  finaltranso = decode(finaltranso)
+  finaltranso = fix_URI(finaltranso)
+  print(f'Decoded translation: {finaltranso}')
+  finaltrans += finaltranso
+  with open(f'{input_dir}/output_query.txt', 'w', encoding="utf8") as outputfile:
     outputfile.writelines([finaltrans])
-    outputfile.close()

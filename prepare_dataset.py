@@ -32,7 +32,7 @@ def preprocess_sentence(w):
 
   # adding a start and an end token to the sentence
   # so that the model know when to start and stop predicting.
-  w = '<start> ' + w + ' <end>'
+  w = f'<start> {w} <end>'
   return w
 
 def create_dataset(path, num_examples):
@@ -69,20 +69,16 @@ def convert(lang, tensor):
       print ("%d ----> %s" % (t, lang.index_word[t]))
 
 def merging_datafile(input_dir,output_dir):
-    input_diren=input_dir+'/data.en'
-    input_dirspq=input_dir+'/data.sparql'
-    output_dir+='/data.txt'
-    file1 = open(input_diren,'r',encoding="utf8")
+  input_diren = f'{input_dir}/data.en'
+  input_dirspq = f'{input_dir}/data.sparql'
+  output_dir+='/data.txt'
+  with open(input_diren,'r',encoding="utf8") as file1:
     Lines1 = file1.readlines()
     file2 = open(input_dirspq,'r',encoding="utf8")
     Lines2 = file2.readlines()
-    s=[]
-    for i in range(len(Lines1)):
-        s.append(Lines1[i].replace('\n'," ")+"\t "+Lines2[i])
-
+    s = [Lines1[i].replace('\n'," ")+"\t "+Lines2[i] for i in range(len(Lines1))]
     filef = open(output_dir,'w',encoding="utf8")
     filef.writelines(s)
-    file1.close()
-    file2.close()
-    filef.close()
-    return output_dir
+  file2.close()
+  filef.close()
+  return output_dir

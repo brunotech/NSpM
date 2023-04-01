@@ -28,84 +28,84 @@ def generate_templates(label,project_name,depth=1,output_file="basic_sentence_an
     diction = fetch_ranks("../utility/part-r-00000")
     if (not os.path.isdir(project_name)):
         os.makedirs(project_name)
-    output_file = open(project_name + "/" + output_file, 'w')
-    test_set = open(project_name + "/" + "test.csv", 'w')
-    if paraphraser:
-        expand_set = open(project_name + "/" + "expand.csv", 'w')
-    prop_dic = {}
-    for iterator in range(depth):
-        prop_dic[iterator] = []
-    # Create a logger object
-    logger = logging.getLogger()
+    with open(f"{project_name}/{output_file}", 'w') as output_file:
+        test_set = open(f"{project_name}/test.csv", 'w')
+        if paraphraser:
+            expand_set = open(f"{project_name}/expand.csv", 'w')
+        prop_dic = {iterator: [] for iterator in range(depth)}
+        # Create a logger object
+        logger = logging.getLogger()
 
-    # Configure logger
-    logging.basicConfig(filename=project_name + "/logfile.log", format='%(filename)s: %(message)s', filemode='w')
+            # Configure logger
+        logging.basicConfig(
+            filename=f"{project_name}/logfile.log",
+            format='%(filename)s: %(message)s',
+            filemode='w',
+        )
 
-    # Setting threshold level
-    logger.setLevel(logging.WARNING)
+        # Setting threshold level
+        logger.setLevel(logging.WARNING)
 
-    # Use the logging methods
-    # logger.debug("This is a debug message")
-    logger.info("This is a log file.")
-    # logger.warning("This is a warning message")
-    # logger.error("This is an error message")
-    # logger.critical("This is a critical message")
-    if paraphraser:
-        folder_path = get_pretrained_model(const.URL)
-        set_seed(42)
-        tokenizer, device, model = prepare_model(folder_path)
+        # Use the logging methods
+        # logger.debug("This is a debug message")
+        logger.info("This is a log file.")
+        # logger.warning("This is a warning message")
+        # logger.error("This is an error message")
+        # logger.critical("This is a critical message")
+        if paraphraser:
+            folder_path = get_pretrained_model(const.URL)
+            set_seed(42)
+            tokenizer, device, model = prepare_model(folder_path)
 
-    if multi:
+        if multi:
 
-        match = re.findall(r'([a-zA-Z]+)[,|\]]', label)
-        for ontology in match:
-            val = generate_url(ontology)
+            match = re.findall(r'([a-zA-Z]+)[,|\]]', label)
+            for ontology in match:
+                val = generate_url(ontology)
+                url = val[0]
+                about = (val[1])
+                list_of_property_information = get_properties(url=url, project_name=project_name,
+                                                              output_file="get_properties.csv", multi=multi)
+                for property_line in list_of_property_information:
+                    count += 1
+                    prop = property_line.split(',')
+                    print("**************\n" + str(prop))
+                    if paraphraser:
+                        basic_sentence_and_template_generator(original_count=depth, prop_dic=prop_dic, test_set=test_set,
+                                                        log=logger, diction=diction, output_file=output_file,
+                                                        mother_ontology=about.strip().replace(
+                                                            "http://dbpedia.org/ontology/", "dbo:"), vessel=vessel,
+                                                        project_name=project_name, prop=prop, suffix=" of <A> ?",
+                                                        count=depth, expand_set=expand_set, tokenizer=tokenizer,
+                                                        device=device, model=model, bert_model_dir=bert_model_dir)
+                    else:
+                        basic_sentence_and_template_generator(original_count=depth, prop_dic=prop_dic, test_set=test_set,
+                                                        log=logger,
+                                                        diction=diction, output_file=output_file,
+                                                        mother_ontology=about.strip().replace(
+                                                            "http://dbpedia.org/ontology/",
+                                                            "dbo:"), vessel=vessel,
+                                                        project_name=project_name, prop=prop, suffix=" of <A> ?",
+                                                        count=depth)
+
+        else:
+
+            val = generate_url(label)
             url = val[0]
             about = (val[1])
-            list_of_property_information = get_properties(url=url, project_name=project_name,
-                                                          output_file="get_properties.csv", multi=multi)
-            for property_line in list_of_property_information:
-                count += 1
-                prop = property_line.split(',')
-                print("**************\n" + str(prop))
-                if paraphraser:
-                    basic_sentence_and_template_generator(original_count=depth, prop_dic=prop_dic, test_set=test_set,
-                                                    log=logger, diction=diction, output_file=output_file,
-                                                    mother_ontology=about.strip().replace(
-                                                        "http://dbpedia.org/ontology/", "dbo:"), vessel=vessel,
-                                                    project_name=project_name, prop=prop, suffix=" of <A> ?",
-                                                    count=depth, expand_set=expand_set, tokenizer=tokenizer,
-                                                    device=device, model=model, bert_model_dir=bert_model_dir)
-                else:
-                    basic_sentence_and_template_generator(original_count=depth, prop_dic=prop_dic, test_set=test_set,
-                                                    log=logger,
-                                                    diction=diction, output_file=output_file,
-                                                    mother_ontology=about.strip().replace(
-                                                        "http://dbpedia.org/ontology/",
-                                                        "dbo:"), vessel=vessel,
-                                                    project_name=project_name, prop=prop, suffix=" of <A> ?",
-                                                    count=depth)
 
-    else:
-
-        val = generate_url(label)
-        url = val[0]
-        about = (val[1])
-
-    for property_line in list_of_property_information:
-        count+=1
-        prop = property_line.split(',')
-        print("**************\n"+str(prop))
-        if paraphraser:
-            basic_sentence_and_template_generator(original_count=depth,prop_dic=prop_dic,test_set=test_set,log=logger,diction=diction,output_file=output_file,mother_ontology=about.strip().replace("http://dbpedia.org/ontology/","dbo:"),vessel=vessel,project_name=project_name ,prop=prop, suffix = " of <A> ?",count = depth,expand_set=expand_set,tokenizer=tokenizer,device=device,model=model)
-        else:
-            basic_sentence_and_template_generator(original_count=depth, prop_dic=prop_dic, test_set=test_set, log=logger,
-                                            diction=diction, output_file=output_file,
-                                            mother_ontology=about.strip().replace("http://dbpedia.org/ontology/",
-                                                                                  "dbo:"), vessel=vessel,
-                                            project_name=project_name, prop=prop, suffix=" of <A> ?", count=depth)
-
-    output_file.close()
+        for property_line in list_of_property_information:
+            count+=1
+            prop = property_line.split(',')
+            print("**************\n"+str(prop))
+            if paraphraser:
+                basic_sentence_and_template_generator(original_count=depth,prop_dic=prop_dic,test_set=test_set,log=logger,diction=diction,output_file=output_file,mother_ontology=about.strip().replace("http://dbpedia.org/ontology/","dbo:"),vessel=vessel,project_name=project_name ,prop=prop, suffix = " of <A> ?",count = depth,expand_set=expand_set,tokenizer=tokenizer,device=device,model=model)
+            else:
+                basic_sentence_and_template_generator(original_count=depth, prop_dic=prop_dic, test_set=test_set, log=logger,
+                                                diction=diction, output_file=output_file,
+                                                mother_ontology=about.strip().replace("http://dbpedia.org/ontology/",
+                                                                                      "dbo:"), vessel=vessel,
+                                                project_name=project_name, prop=prop, suffix=" of <A> ?", count=depth)
 
 if __name__ == "__main__":
     """
@@ -141,4 +141,3 @@ if __name__ == "__main__":
     bert_model_dir = args.model
 
     generate_templates(label=label,project_name=project_name,depth=depth, paraphraser=paraphraser, multi = multi, bert_model_dir = bert_model_dir)
-    pass

@@ -12,11 +12,12 @@ proxy_handler = urllib2.ProxyHandler(proxies)
 opener = urllib2.build_opener(proxy_handler)
 urllib2.install_opener(opener)
 
-Q = dict()
-Q["sorted"] = "SELECT DISTINCT ?p (COUNT(*) AS ?c) WHERE { ?s ?p ?o . ?s a mydbo . } GROUP BY ?p ORDER BY DESC(?c)"
-Q["prop-metadata-dom"] = "SELECT DISTINCT ?p ?lab ?dom WHERE { ?s ?p ?o . ?s a mydbo . ?p a rdf:Property . ?p rdfs:label ?lab . OPTIONAL { ?p rdfs:domain ?dom } . FILTER(lang(?lab) = 'en') . } "
-Q["prop-metadata-rng"] = "SELECT DISTINCT ?p ?lab ?rng WHERE { ?s ?p ?o . ?s a mydbo . ?p a rdf:Property . ?p rdfs:label ?lab . OPTIONAL { ?p rdfs:range ?rng } . FILTER(lang(?lab) = 'en') .  } "
-Q["count"] = "SELECT DISTINCT (COUNT(*) AS ?c) WHERE { ?s ?p ?o . ?s a mydbo . ?p a rdf:Property . } GROUP BY ?p "
+Q = {
+	"sorted": "SELECT DISTINCT ?p (COUNT(*) AS ?c) WHERE { ?s ?p ?o . ?s a mydbo . } GROUP BY ?p ORDER BY DESC(?c)",
+	"prop-metadata-dom": "SELECT DISTINCT ?p ?lab ?dom WHERE { ?s ?p ?o . ?s a mydbo . ?p a rdf:Property . ?p rdfs:label ?lab . OPTIONAL { ?p rdfs:domain ?dom } . FILTER(lang(?lab) = 'en') . } ",
+	"prop-metadata-rng": "SELECT DISTINCT ?p ?lab ?rng WHERE { ?s ?p ?o . ?s a mydbo . ?p a rdf:Property . ?p rdfs:label ?lab . OPTIONAL { ?p rdfs:range ?rng } . FILTER(lang(?lab) = 'en') .  } ",
+	"count": "SELECT DISTINCT (COUNT(*) AS ?c) WHERE { ?s ?p ?o . ?s a mydbo . ?p a rdf:Property . } GROUP BY ?p ",
+}
 
 def create_query(curr_class, type, offset=None, limit=None):
 		

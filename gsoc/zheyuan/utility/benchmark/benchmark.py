@@ -31,7 +31,7 @@ def benchmark(trained_model, test_set, answer_file="answers.json"):
 
     json_file = construct_json(test_set.replace(".qald.json",""), questions_info, questions, sparqls, answers)
     path = "../gsoc/zheyuan/utility/benchmark/"
-    with open(path+"answers-"+test_set, "w") as f:
+    with open(f"{path}answers-{test_set}", "w") as f:
         # js = json.dumps(json_file, indent=4, separators=(',', ':'))
         json.dump(json_file, f, indent=4, separators=(', ', ': '))
 
@@ -55,4 +55,3 @@ if __name__ == "__main__":
     test_set = args.test
     answer_file = args.answer
     benchmark(trained_model,test_set, answer_file)
-    pass

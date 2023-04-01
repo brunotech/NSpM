@@ -49,30 +49,26 @@ EXAMPLES_PER_TEMPLATE = 600
 
 
 def extract_bindings(data, template):
-    matches = list()
-    for match in data:
-        matches.append(match)
-
+    matches = list(data)
     random.shuffle(matches)
-    logging.debug('{} matches for {}'.format(
-        len(matches), getattr(template, 'id')))
+    logging.debug(f"{len(matches)} matches for {getattr(template, 'id')}")
 
-    if len(matches) == 0:
+    if not matches:
         return None
 
     if len(matches) <= EXAMPLES_PER_TEMPLATE:
         best_matches = matches
     else:
-        best_matches = sort_matches(matches, template)[0:EXAMPLES_PER_TEMPLATE]
+        best_matches = sort_matches(matches, template)[:EXAMPLES_PER_TEMPLATE]
 
-    bindings = list()
+    bindings = []
     variables = getattr(template, 'variables')
 
     for match in best_matches:
         binding = {}
         for variable in variables:
             resource = match[variable]["value"]
-            label = match["l" + variable]["value"]
+            label = match[f"l{variable}"]["value"]
             binding[variable] = {'uri': resource, 'label': label}
             used_resources.update([resource])
         bindings.append(binding)
@@ -99,11 +95,10 @@ def prioritize_usage(match):
     usages = match['usages']
     if len(usages) == 1:
         return prioritize_single_match(usages[0])
+    if len(usages) == 2:
+        return prioritize_couple_match(usages)
     else:
-        if len(usages) == 2:
-            return prioritize_couple_match(usages)
-        else:
-            return prioritize_triple_match(usages)
+        return prioritize_triple_match(usages)
 
 
 def prioritize_single_match(usage):
@@ -111,7 +106,6 @@ def prioritize_single_match(usage):
     second_highest_priority = 30 >= usage > 20
     third_highest_priority = 10 >= usage > 0
     fourth_highest_priority = 50 >= usage > 30
-    fifth_highest_priority = usage == 0
     if highest_priority:
         return 0
     if second_highest_priority:
@@ -120,13 +114,13 @@ def prioritize_single_match(usage):
         return 2
     if fourth_highest_priority:
         return 3
-    if fifth_highest_priority:
-        return 4
-    return usage
+    fifth_highest_priority = usage == 0
+    return 4 if fifth_highest_priority else usage
 
 
 def prioritize_couple_match(usages):
     def between_zero_and_upper_limit(value): return 0 < value < 30
+
     usage, other_usage = usages
     highest_priority = all(map(between_zero_and_upper_limit, usages))
     second_highest_priority = any(map(between_zero_and_upper_limit, usages))
@@ -136,13 +130,12 @@ def prioritize_couple_match(usages):
         return 0
     if second_highest_priority:
         return 1
-    if third_highest_priority:
-        return 2
-    return sum(usages)
+    return 2 if third_highest_priority else sum(usages)
 
 
 def prioritize_triple_match(usages):
     def between_zero_and_upper_limit(value): return 0 < value < 30
+
     highest_priority = all(map(between_zero_and_upper_limit, usages))
     second_highest_priority = list(
         filter(between_zero_and_upper_limit, usages)) >= 2
@@ -152,10 +145,7 @@ def prioritize_triple_match(usages):
         return 0
     if second_highest_priority:
         return 1
-    if third_highest_priority:
-        return 2
-
-    return sum(usages)
+    return 2 if third_highest_priority else sum(usages)
 
 
 def build_dataset_pair(binding, template):
@@ -164,26 +154,25 @@ def build_dataset_pair(binding, template):
     for variable in binding:
         uri = binding[variable]['uri']
         label = binding[variable]['label']
-        placeholder = '<{}>'.format(str.upper(variable))
+        placeholder = f'<{str.upper(variable)}>'
         if placeholder in english and label is not None:
             english = english.replace(placeholder, strip_brackets(label))
         if placeholder in sparql and uri is not None:
             sparql = sparql.replace(placeholder, uri)
 
     sparql = encode(sparql)
-    dataset_pair = {'english': english, 'sparql': sparql}
-    return dataset_pair
+    return {'english': english, 'sparql': sparql}
 
 
 def generate_dataset(templates, output_dir, file_mode):
-    cache = dict()
+    cache = {}
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     it = 0
-    with io.open(output_dir + '/data.en', file_mode, encoding="utf-8") as english_questions, io.open(output_dir + '/data.sparql', file_mode, encoding="utf-8") as sparql_queries:
+    with (io.open(f'{output_dir}/data.en', file_mode, encoding="utf-8") as english_questions, io.open(f'{output_dir}/data.sparql', file_mode, encoding="utf-8") as sparql_queries):
         for template in tqdm(templates):
             it = it + 1
-            print("for {}th template".format(it))
+            print(f"for {it}th template")
             try:
                 results = get_results_of_generator_query(cache, template)
                 bindings = extract_bindings(
@@ -192,18 +181,15 @@ def generate_dataset(templates, output_dir, file_mode):
                 if bindings is None:
                     id_or_question = getattr(
                         template, 'id') or getattr(template, 'question')
-                    logging.debug("no data for {}".format(id_or_question))
+                    logging.debug(f"no data for {id_or_question}")
                     not_instanced_templates.update([id_or_question])
                     continue
 
                 for binding in bindings:
-                    dataset_pair = build_dataset_pair(binding, template)
-                    # print "x", det_pair
-                    if (dataset_pair):
+                    if dataset_pair := build_dataset_pair(binding, template):
                         dataset_pair['english'] = " ".join(
                             dataset_pair['english'].split())
-                        english_questions.write(
-                            "{}\n".format(dataset_pair['english']))
+                        english_questions.write(f"{dataset_pair['english']}\n")
                         dataset_pair['sparql'] = re.sub(
                             r"\s\s+", " ", dataset_pair['sparql'])
                         a = re.search('(.*)brack_open', dataset_pair['sparql'])
@@ -212,22 +198,21 @@ def generate_dataset(templates, output_dir, file_mode):
                         c = re.search('brack_close(.*)',
                                       dataset_pair['sparql'])
                         # print a.group(1),b.group(1)
-                        a = a.group(1)
-                        b = b.group(1)
-                        c = c.group(1)
+                        a = a[1]
+                        b = b[1]
+                        c = c[1]
                         b = b.replace(' attr_open ', '(')
                         b = b.replace(' attr_close', ')')
-                        dataset_pair['sparql'] = a + \
-                            ' brack_open ' + b + ' brack_close ' + c
+                        dataset_pair['sparql'] = f'{a} brack_open {b} brack_close {c}'
                         dataset_pair['sparql'] = " ".join(
                             dataset_pair['sparql'].split())
 
-                        sparql_queries.write(
-                            "{}\n".format(dataset_pair['sparql']))
+                        sparql_queries.write(f"{dataset_pair['sparql']}\n")
             except:
                 exception = traceback.format_exc()
-                logging.error('template {} caused exception {}'.format(
-                    getattr(template, 'id'), exception))
+                logging.error(
+                    f"template {getattr(template, 'id')} caused exception {exception}"
+                )
                 logging.info(
                     '1. fix problem\n2. remove templates until the exception template in the template file\n3. restart with `--continue` parameter')
                 raise Exception()
@@ -286,16 +271,19 @@ def prepare_generator_query(template, add_type_requirements=True, do_special_cla
             if variable_is_subclass(generator_query, variable):
                 generator_query = add_requirement(generator_query, SUBCLASS_REPLACEMENT.format(
                     variable=variable, ontology_class=normalized_target_class))
+            elif normalized_target_class in SPECIAL_CLASSES and do_special_class_replacement:
+                classes = ' '.join(
+                    [
+                        f'({c})'
+                        for c in SPECIAL_CLASSES[normalized_target_class]
+                    ]
+                )
+                generator_query = add_requirement(
+                    generator_query, CLASSES_REPLACEMENT.format(variable=variable, classes=classes))
             else:
-                if normalized_target_class in SPECIAL_CLASSES and do_special_class_replacement:
-                    classes = ' '.join(
-                        ['({})'.format(c) for c in SPECIAL_CLASSES[normalized_target_class]])
-                    generator_query = add_requirement(
-                        generator_query, CLASSES_REPLACEMENT.format(variable=variable, classes=classes))
-                else:
-                    ontology_class = normalized_target_class
-                    generator_query = add_requirement(generator_query, CLASS_REPLACEMENT.format(
-                        variable=variable, ontology_class=ontology_class))
+                ontology_class = normalized_target_class
+                generator_query = add_requirement(generator_query, CLASS_REPLACEMENT.format(
+                    variable=variable, ontology_class=ontology_class))
     return generator_query
 
 
@@ -303,7 +291,7 @@ def normalize(ontology_class):
     if str.startswith(ontology_class, 'http://dbpedia.org/ontology/'):
         return str.replace(ontology_class, 'http://dbpedia.org/ontology/', 'dbo:')
     if str.startswith(ontology_class, 'http'):
-        return '<{}>'.format(ontology_class)
+        return f'<{ontology_class}>'
     return ontology_class
 
 
@@ -324,17 +312,16 @@ if __name__ == '__main__':
 
    # print use_resources_dump => False
 
-    time = datetime.datetime.today()
+    time = datetime.datetime.now()
     logging.basicConfig(
         filename='{}/generator_{:%Y-%m-%d-%H-%M}.log'.format(output_dir, time), level=logging.DEBUG)
-    resource_dump_file = output_dir + '/resource_dump.json'
+    resource_dump_file = f'{output_dir}/resource_dump.json'
     resource_dump_exists = os.path.exists(resource_dump_file)
 
     # print resource_dump_file, resource_dump_exists => data/place_v1/resource_dump.json False
 
     if (resource_dump_exists and not use_resources_dump):
-        warning_message = 'Warning: The file {} exists which indicates an error. Remove file or continue generation after fixing with --continue'.format(
-            resource_dump_file)
+        warning_message = f'Warning: The file {resource_dump_file} exists which indicates an error. Remove file or continue generation after fixing with --continue'
         print(warning_message)
         sys.exit(1)
 

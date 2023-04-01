@@ -14,13 +14,13 @@ properties = list(set(labels) ^ set(ontologies))
 print(properties)
 domains = set()
 for property in properties:
-    url = "http://dbpedia.org/ontology/"+property
+    url = f"http://dbpedia.org/ontology/{property}"
     page = urllib.request.urlopen(url)
     soup = BeautifulSoup(page, "html.parser")
     for a in soup.find_all(rel="rdfs:domain"):
-        domains.add(re.search(r'dbo:([a-zA-Z]+)', a.text).group(1))
+        domains.add(re.search(r'dbo:([a-zA-Z]+)', a.text)[1])
 
-        print(re.search(r'dbo:([a-zA-Z]+)', a.text).group(1))
+        print(re.search(r'dbo:([a-zA-Z]+)', a.text)[1])
 print(list(domains | set(ontologies)))
 # '[Airline, MeanOfTransportation, Mountain, Organisation, Beverage, Food, Software, Film, Protein, WrittenWork, Work, TelevisionShow, Band, ArchitecturalStructure, PopulatedPlace, Sport, Stream, Person, RouteOfTransportation, Place, Bridge, FictionalCharacter, Holiday, WineRegion, Scientist, Grape]'
 # python multi_generate_templates.py --label '[Airline, MeanOfTransportation, Mountain, Organisation, Beverage, Food, Software, Film, Protein, WrittenWork, Work, TelevisionShow, Band, ArchitecturalStructure, PopulatedPlace, Sport, Stream, Person, RouteOfTransportation, Place, Bridge, FictionalCharacter, Holiday, WineRegion, Scientist, Grape]'--project_name test --depth 1 --multi True

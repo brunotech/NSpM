@@ -13,16 +13,15 @@ def eliminator():
         lines = open(location,'r').readlines()
         print(len(lines))
         accum = []
-        nspm_ready = open("new_train.csv",'w')
-        for line in tqdm(lines):
-                values = line.split(",")
-                if(len(values)<8):
-                        print("Input file is of wrong format, please add the corect bolean values as the last column entry to use this function")
-                print(values[-1])
-                if(values[-1]=="TRUE\n"):
-                        accum.append(";".join(values[:-2])+"\n")
-                        nspm_ready.write(accum[-1])
-        nspm_ready.close()
+        with open("new_train.csv",'w') as nspm_ready:
+                for line in tqdm(lines):
+                        values = line.split(",")
+                        if(len(values)<8):
+                                print("Input file is of wrong format, please add the corect bolean values as the last column entry to use this function")
+                        print(values[-1])
+                        if(values[-1]=="TRUE\n"):
+                                accum.append(";".join(values[:-2])+"\n")
+                                nspm_ready.write(accum[-1])
 
 if __name__ == "__main__":
         parser = argparse.ArgumentParser()
@@ -33,7 +32,6 @@ if __name__ == "__main__":
         args = parser.parse_args()
         location = args.location
         eliminator(location)
-        pass
 
 
         

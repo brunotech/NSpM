@@ -16,7 +16,7 @@ def batch_paraphrase(templates_path, model_dir):
     tokenizer, device, model = prepare_model(folder_path)
     dir = os.path.realpath(templates_path)
     with open(dir, "r") as lines:
-        with open(dir + "_paraphrased", "w") as w:
+        with open(f"{dir}_paraphrased", "w") as w:
             for line in lines:
                 prop = line.strip("\n").split(seperator)
                 question = prop[3]

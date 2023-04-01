@@ -11,12 +11,9 @@ def sparql_generator(input_file, project_name, output_file="sparql_generator.csv
 	if __name__ == "__main__":
 		f = open(input_file, 'r')
 		lines = f.readlines()
-		pass
-	if not __name__ == "__main__":
+	if __name__ != "__main__":
 		lines = decision_tree(input_file=input_file, project_name=project_name,
 								url=url, uri_file=uri_file, namespace=namespace)
-		pass
-
 	# print lines[0].split(',')
 	# ['Property', 'Label ', 'Range', 'Fuzzy Score', 'Comment about expr', 'URI', 'Number of Occurrences',
 	# 'MVE', 'Optimal Expression, SPARQL-TEMPLATE, GENERATOR-QUERY-TEMPLATE\r\n']
@@ -63,26 +60,25 @@ def sparql_generator(input_file, project_name, output_file="sparql_generator.csv
 	thus it is saved in another file named sparql.csv
 	"""
 
-	open(project_name+"/"+output_file, 'w').write(final)
+	open(f"{project_name}/{output_file}", 'w').write(final)
 	return accum
 
 
 if __name__ == "__main__":
-    """
+	"""
     Section to parse the command line arguments.
     """
-    parser = argparse.ArgumentParser()
-    requiredNamed = parser.add_argument_group('Required Arguments')
-    requiredNamed.add_argument('--input_file', dest='inp', metavar='inp',
-                               help='Output from previous step', required=True)
-    requiredNamed.add_argument('--output_file', dest='out', metavar='out',
-                               help='File in which you want to store output', required=True)
-    requiredNamed.add_argument('--project_name', dest='project_name',
-                               metavar='project_name', help='eg.:test', required=True)
-    args = parser.parse_args()
-    input_file = args.inp
-    output_file = args.out
-    project_name = args.project_name
-    sparql_generator(input_file=input_file, output_file=output_file,
-                     project_name=project_name)
-    pass
+	parser = argparse.ArgumentParser()
+	requiredNamed = parser.add_argument_group('Required Arguments')
+	requiredNamed.add_argument('--input_file', dest='inp', metavar='inp',
+	                           help='Output from previous step', required=True)
+	requiredNamed.add_argument('--output_file', dest='out', metavar='out',
+	                           help='File in which you want to store output', required=True)
+	requiredNamed.add_argument('--project_name', dest='project_name',
+	                           metavar='project_name', help='eg.:test', required=True)
+	args = parser.parse_args()
+	input_file = args.inp
+	output_file = args.out
+	project_name = args.project_name
+	sparql_generator(input_file=input_file, output_file=output_file,
+	                 project_name=project_name)

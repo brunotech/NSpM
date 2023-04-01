@@ -5,13 +5,12 @@ def eliminator(input_file, output_file,threshold):
         lines = open(input_file,'r').readlines()
         print(len(lines))
         accum = []
-        nspm_ready = open(output_file,'w')
-        for line in tqdm(lines):
-                values = line.split(";")
-                if(int(values[-1])>int(threshold)):
-                        accum.append(";".join(values[:-1])+"\n")
-                        nspm_ready.write(accum[-1])
-        nspm_ready.close()
+        with open(output_file,'w') as nspm_ready:
+                for line in tqdm(lines):
+                        values = line.split(";")
+                        if(int(values[-1])>int(threshold)):
+                                accum.append(";".join(values[:-1])+"\n")
+                                nspm_ready.write(accum[-1])
 
 
 if __name__ == "__main__":
@@ -32,6 +31,5 @@ if __name__ == "__main__":
         output_file = args.output
         threshold = args.threshold
         eliminator(input_file=input_file, output_file=output_file,threshold=threshold)
-        pass
 
         

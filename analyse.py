@@ -25,11 +25,8 @@ import importlib
 
 
 def analyse( translation ):
-    result = {}
-    for test in TESTS:
-        result[test] = TESTS[test](translation)
-
-    everything_okay = all([result[test] for test in TESTS])
+    result = {test: TESTS[test](translation) for test in TESTS}
+    everything_okay = all(result[test] for test in TESTS)
     details['everything_okay'].update([everything_okay])
 
     return result
@@ -39,21 +36,20 @@ def validate( translation ):
     _, query = translation
     # encode slash in prefix uri
     entity_with_attribute = r'\w+:\w+\(<?\w+>?\)'
-    match = re.search(entity_with_attribute, query)
-    if match:
-        entity = match.group(0)
+    if match := re.search(entity_with_attribute, query):
+        entity = match[0]
         entity_encoded = re.sub(r'\(<?', r'\(', entity)
         entity_encoded = re.sub(r'>?\)', r'\)', entity_encoded)
         query = query.replace(entity, entity_encoded)
     try:
         parser.parseQuery(query)
     except ParseException as exception:
-        print('{} in "{}", loc: {}'.format(exception.msg, exception.line, exception.loc))
+        print(f'{exception.msg} in "{exception.line}", loc: {exception.loc}')
         details['parse_exception'].update([exception.msg])
         return False
     except Exception as exception:
         msg = str(exception)
-        print('{}'.format(msg))
+        print(f'{msg}')
         details['other_exception'].update([msg])
         return False
     else:
@@ -70,27 +66,29 @@ def extract_type( query ):
     result_description = extract_result_description(query)
     types = [r'select.*?count.*?where', 'select', 'ask', 'describe']
     for query_type in types:
-        match = re.search(query_type, result_description, re.IGNORECASE)
-        if match:
+        if match := re.search(query_type, result_description, re.IGNORECASE):
             return query_type
     return None
 
 
-def extract_result_description (sparqlQuery):
+def extract_result_description(sparqlQuery):
     selectStatementPattern = r'(.*?)\swhere'
-    selectStatementMatch = re.search(selectStatementPattern, sparqlQuery, re.IGNORECASE)
-    if selectStatementMatch:
-        return selectStatementMatch.group(1)
+    if selectStatementMatch := re.search(
+        selectStatementPattern, sparqlQuery, re.IGNORECASE
+    ):
+        return selectStatementMatch[1]
     return ''
 
 
-def check_entities ( translation ):
+def check_entities( translation ):
     target, generated = translation
     entities = extract_entities(target)
     if not entities:
         return False
     entities_detected = [entity in generated for entity in entities]
-    entities_with_occurence_count = ['{} [{}]'.format(entity, get_occurence_count(entity)) for entity in entities]
+    entities_with_occurence_count = [
+        f'{entity} [{get_occurence_count(entity)}]' for entity in entities
+    ]
     if all(entities_detected):
         details['detected_entity'].update(entities_with_occurence_count)
         return True
@@ -133,7 +131,7 @@ def summarise( summary, current_evaluation ):
 
 def log_summary( summary, details, org_file, ask_output_file ):
     print('\n\nSummary\n')
-    print('Analysis based on {} and {}'.format(org_file, ask_output_file))
+    print(f'Analysis based on {org_file} and {ask_output_file}')
     for test in TESTS:
         print('{:30}: {:6d} True / {:6d} False'.format(test, summary[test][True], summary[test][False]))
     print('{:30}: {:6d} True / {:6d} False'.format('everything_okay', details['everything_okay'][True], details['everything_okay'][False]))
@@ -149,14 +147,14 @@ def read( file_name ):
     return questions
 
 
-def get_occurence_count ( entity ):
+def get_occurence_count( entity ):
     key = str(entity)
     occurence_count = used_entities_counter[key] if key in used_entities_counter else 0
     if not occurence_count:
         key += '.'
         occurence_count = used_entities_counter[key] if key in used_entities_counter else 0
-        if not occurence_count:
-            print('not found: {}'.format(entity))
+    if not occurence_count:
+        print(f'not found: {entity}')
     return occurence_count
 
 
@@ -192,7 +190,9 @@ if __name__ == '__main__':
     }
 
     directory = os.path.dirname(ask_output_file)
-    used_entities_counter = json.load(open('{}/used_resources_normalized.json'.format(directory)))
+    used_entities_counter = json.load(
+        open(f'{directory}/used_resources_normalized.json')
+    )
     encoded_targets = read(targets_file)
     encoded_generated = read(ask_output_file)
 
@@ -204,9 +204,6 @@ if __name__ == '__main__':
     generated = list(map(decode, encoded_generated))
     translations = list(zip(targets, generated))
     evaluation = list(map(analyse, translations))
-    summary_obj = {}
-    for test in TESTS:
-        summary_obj[test] = collections.Counter()
-
+    summary_obj = {test: collections.Counter() for test in TESTS}
     summary = reduce(summarise, evaluation, summary_obj)
     log_summary(summary, details, targets_file, ask_output_file)

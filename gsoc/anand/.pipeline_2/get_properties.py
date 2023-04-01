@@ -17,32 +17,32 @@ def get_properties(url,  project_name="test_project", output_file = "get_propert
     soup = BeautifulSoup(page, "html.parser")
     if(not os.path.isdir(project_name)):
         os.makedirs(project_name)
-    output_file = open(project_name+"/" + output_file, 'w')
-    fl = 0
-    accum = []
-    for rows in tqdm(soup.find_all("tr")):
-        x = rows.find_all("td")
-        if len(x) <= 2:
-            fl = 1
-            continue
-        if fl == 1:
-            fl = 2
-            continue
-        name = rows.find_all("td")[0].get_text().replace(" (edit)", "")
-        label = rows.find_all("td")[1].get_text()
-        dom = rows.find_all("td")[2].get_text()
-        rng = rows.find_all("td")[3].get_text()
+    with open(f"{project_name}/{output_file}", 'w') as output_file:
+        fl = 0
+        accum = []
+        for rows in tqdm(soup.find_all("tr")):
+            x = rows.find_all("td")
+            if len(x) <= 2:
+                fl = 1
+                continue
+            if fl == 1:
+                fl = 2
+                continue
+            name = rows.find_all("td")[0].get_text().replace(" (edit)", "")
+            label = rows.find_all("td")[1].get_text()
+            dom = rows.find_all("td")[2].get_text()
+            rng = rows.find_all("td")[3].get_text()
 
-        final = name + "," + label + "," + dom + "," + rng
-        accum.append(final)
-        output_file.write(final+"\n")
-    output_file.close()
+            final = f"{name},{label},{dom},{rng}"
+            accum.append(final)
+            output_file.write(final+"\n")
     return accum
 
 
 """
 Name, Label, Domain, Range
 """
+
 
 if __name__ == "__main__":
     """
@@ -62,4 +62,3 @@ if __name__ == "__main__":
     output_file = args.out_put
     project_name = args.project_name
     get_properties(url = url, project_name= project_name,  output_file = output_file)
-    pass

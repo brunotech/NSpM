@@ -1,7 +1,5 @@
 def construct_json(dataset_id,infos, questions, sparqls, answers):
-    qald_test_answers_dict = {}
-    qald_test_answers_dict["dataset"] = {'id':dataset_id}
-    qald_test_answers_dict['questions'] = []
+    qald_test_answers_dict = {"dataset": {'id': dataset_id}, 'questions': []}
     print(len(answers))
     for index,info in enumerate(infos):
 

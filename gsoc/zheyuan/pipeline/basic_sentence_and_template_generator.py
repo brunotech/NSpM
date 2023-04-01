@@ -16,17 +16,14 @@ def rank_check(query, diction, count, original_count):
     count = original_count - count
     ques = " "
     for value in range(count):
-        if (value == 0):
-            ques = ques + "?x "
-        else:
-            ques = ques + "?x" + str(value + 1) + " "
-    query = query.replace("(?a)", "(?a)" + ques) + " order by RAND() limit 100"
+        ques = f"{ques}?x " if (value == 0) else f"{ques}?x{str(value + 1)} "
+    query = query.replace("(?a)", f"(?a){ques}") + " order by RAND() limit 100"
     # print(query)
     try:  # python3
         query = urllib.parse.quote_plus(query)
     except:  # python2
         query = urllib.quote_plus(query)
-    url = "https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=" + query + "&format=text%2Fhtml&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+"
+    url = f"https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query={query}&format=text%2Fhtml&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+"
     # url = "https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query="+query + \
     #    "&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+"
     # print(url)
@@ -56,7 +53,7 @@ def rank_check(query, diction, count, original_count):
 def check_query(log, query):
     query_original = query
     query = urllib.parse.quote_plus(query)
-    url = "https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=" + query + "&format=text%2Fhtml&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+"
+    url = f"https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query={query}&format=text%2Fhtml&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+"
     # print(url)
     try:
         page = urllib.request.urlopen(url)

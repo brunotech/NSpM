@@ -7,6 +7,7 @@ train set.
 set for a given number of times.
 """
 
+
 from tqdm import tqdm
 import json
 import os
@@ -18,28 +19,15 @@ train_sparql = open("train.sparql",'r').readlines()
 
 accum = []
 
-# List of all DBpedia resources in the vocabulary. 
-dbr = []
-for word in train_vocab:
-    if(word.startswith('dbr')):
-        dbr.append(word.strip())
+dbr = [word.strip() for word in train_vocab if (word.startswith('dbr'))]
 print(len(dbr))
 
-# List of all DBpedia ontologies in the vocabulary
-dbo = []
-for word in train_vocab:
-    if(word.startswith('dbo')):
-        dbo.append(word.strip())
+dbo = [word.strip() for word in train_vocab if (word.startswith('dbo'))]
 print(len(dbo))
 dbo_useful = []
-dic = {}
+print(f"Number of enteries in the test file SPARQL : {len(test_sparql)}")
 
-print("Number of enteries in the test file SPARQL : "+ str(len(test_sparql)))
-
-dbo_dic= {}
-for temp in dbo:
-        dbo_dic[temp] = 0
-
+dbo_dic = {temp: 0 for temp in dbo}
 # Removing all the ontologies not present in the train vocabulary
 for lines in tqdm(train_sparql):
     flag = 0
@@ -61,10 +49,7 @@ dbo_value = json.dumps(dbo_dic)
 open("dbo_dump_train.json",'w').write(dbo_value)
 
 dbo_useful = []
-dbo_dic= {}
-for temp in dbo:
-        dbo_dic[temp] = 0
-
+dbo_dic = {temp: 0 for temp in dbo}
 # Removing all the ontologies not present in the train vocabulary
 for lines in tqdm(test_sparql):
     flag = 0
@@ -77,7 +62,7 @@ for lines in tqdm(test_sparql):
         if(wor.strip().startswith("dbo") and wor.strip() not in dbo):
                 flag = 0
                 break
-        
+
         """ if(wor.strip().startswith("dbo") and not flag):
                 dbo_dic[wor] = 1
                 dbo.append(wor) """
@@ -91,14 +76,11 @@ dbo_value = json.dumps(dbo_dic)
 # Creating a dump of the frequency of the vacubulary counted.
 open("dbo_dump.json",'w').write(dbo_value)
 
-print("After DBO:" +str(len(dbo_useful)))
+print(f"After DBO:{len(dbo_useful)}")
 accum = []
 
 
-# Initializing the counter for resource vocabulary to 0
-for temp in dbr:
-        dic[temp] = 0
-
+dic = {temp: 0 for temp in dbr}
 # Vocabulary frequency calculator
 if(os.path.exists("dump.json")):
         dump = open("dump.json").read()
@@ -115,11 +97,7 @@ else:
 print("Frequency Calculated")
 
 
-# Removing all vocabulary with frequency less than a pre-defined threshold
-dbr_refined = []
-for key in dic.keys():
-        if(dic[key] > 7):
-                dbr_refined.append(key)
+dbr_refined = [key for key in dic.keys() if (dic[key] > 7)]
 # Redifining dbr
 dbr = dbr_refined
 useful = []
@@ -140,7 +118,7 @@ for lines in tqdm(dbo_useful):
     if(flag):
         accum.append(lines)
 
-print("After DBR:" +str(len(useful)))
+print(f"After DBR:{len(useful)}")
 
 open("stuff.sparql",'w').write(''.join(useful))
 

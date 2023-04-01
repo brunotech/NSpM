@@ -41,20 +41,21 @@ def calculate_unknown(finetune_glove,dimension):
     vecs = np.zeros((len(finetune_glove), dimension), dtype=np.float32)
     for i, key in enumerate(finetune_glove):
         vecs[i] = np.array(finetune_glove[key], dtype=np.float32)
-    unknown = np.mean(vecs, axis=0)
-    return unknown
+    return np.mean(vecs, axis=0)
 
 def finetune_glove(project_path, glove_path="glove.6B.300d.txt", dimension=300):
     word_en = []
-    with open(project_path+"/data.en", "r") as lines:
+    with open(f"{project_path}/data.en", "r") as lines:
         for sentence in lines:
             sentence = sentence.strip("\n")
-            sentence = "<s> " + sentence + " </s>"
-            for word in sentence.split():
-                word_en.append(word.strip(":").strip("\"").strip("»").strip("+").strip("?"))
+            sentence = f"<s> {sentence} </s>"
+            word_en.extend(
+                word.strip(":").strip("\"").strip("»").strip("+").strip("?")
+                for word in sentence.split()
+            )
     print(len(word_en), word_en[:20])
 
-    vocab_en = list(set(word_en) - set(["<s>", "</s>"]))
+    vocab_en = list(set(word_en) - {"<s>", "</s>"})
 
     pre_glove = glove2dict(glove_path)
     stride = 700000
@@ -70,9 +71,16 @@ def finetune_glove(project_path, glove_path="glove.6B.300d.txt", dimension=300):
     finetune_glove = batch_finetune(finetune_glove, word_en[start:], dimension)
     unk = calculate_unknown(finetune_glove, dimension)
     finetune_glove["<UNK>"] = unk
-    with open(project_path+"/embed.en", "w") as w:
+    with open(f"{project_path}/embed.en", "w") as w:
         for word in finetune_glove:
-            w.write(word + " " + str(list(finetune_glove[word])).replace("[", "").replace("]", "").replace(",", "") + "\n")
+            w.write(
+                f"{word} "
+                + str(list(finetune_glove[word]))
+                .replace("[", "")
+                .replace("]", "")
+                .replace(",", "")
+                + "\n"
+            )
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -85,9 +93,7 @@ if __name__=="__main__":
 
     args = parser.parse_args()
     path = args.path
-    dimension = args.dimension
-
-    if dimension:
+    if dimension := args.dimension:
         if dimension <= 50:
             dimension = 50
         elif dimension <= 100:
@@ -96,7 +102,8 @@ if __name__=="__main__":
             dimension = 200
         else:
             dimension = 300
-        finetune_glove(path,"glove.6B/glove.6B."+dimension+"d.txt", dimension=dimension)
+        finetune_glove(
+            path, f"glove.6B/glove.6B.{dimension}d.txt", dimension=dimension
+        )
     else:
         finetune_glove(path, "glove.6B/glove.6B.300d.txt")
-    pass

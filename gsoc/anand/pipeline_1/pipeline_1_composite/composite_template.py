@@ -11,22 +11,18 @@ from tqdm import tqdm
 # [ class_name, empty, empty, NLQ (MVE), Sparql Query, Generator Query] #
 
 def composite_template(input_file, uri_file, url, output_file, project_name, namespace,rs):
-	if (int(rs) == 1) :
-		open_files = open(input_file, 'r')
-		lines = open_files.readlines()
-		open_files.close()
-		output_file_write = open(project_name+"/" + output_file, 'w')
+	if (int(rs) == 1):
+		with open(input_file, 'r') as open_files:
+			lines = open_files.readlines()
+		output_file_write = open(f"{project_name}/{output_file}", 'w')
 	else:
 		list_val = range_place(input_file=input_file, project_name=project_name,
 									url=url, uri_file=uri_file, namespace=namespace)
 		lines = list_val[0]
 		output_file_write = list_val[1]
 
-	
-	b = []
-	b.append("where is the")
-	b.append("")
-	b.append("of <A> located in")
+
+	b = ["where is the", "", "of <A> located in"]
 	accum = []
 	for l in tqdm(lines):
 		l = l.strip().split(',')
@@ -36,15 +32,11 @@ def composite_template(input_file, uri_file, url, output_file, project_name, nam
 		if 'place' in l[2].lower() and l[5]!='' and len(l[5])!=0 and 'location of' not in l[7].lower():
 			
 			newl,to_remove = [],[]
-			newl.append("dbo:Place")
-			newl.append("")
-			newl.append("")
-
+			newl.extend(("dbo:Place", "", ""))
 			l[1] = l[1].split()
-			for i in range(len(l[1])):
-				if '(' in l[1][i] or ')' in l[1][i]:
-					to_remove.append(l[1][i])
-					continue
+			to_remove.extend(
+				l[1][i] for i in range(len(l[1])) if '(' in l[1][i] or ')' in l[1][i]
+			)
 			for x in to_remove:
 				l[1].remove(x)
 
@@ -58,15 +50,13 @@ def composite_template(input_file, uri_file, url, output_file, project_name, nam
 			gq = l[-1]
 
 			gq2 = gq.split()[1]
-			gq2 = "distinct(" + gq2 + ")"
+			gq2 = f"distinct({gq2})"
 			gq = gq.split()
 			gq[1] = gq2
 			gq = " ".join(gq).replace("SELECT","select").replace("WHERE","where")
 
 
-			newl.append((nlq))
-			newl.append((spq))
-			newl.append((gq))
+			newl.extend((nlq, spq, gq))
 			newl = ";".join(newl)
 			accum.append(newl)
 	output_file_write.write("\n")
@@ -105,4 +95,3 @@ if __name__ == "__main__":
 	project_name = args.project_name
 	composite_template(input_file=input_file, uri_file=uri_file, url=url,
 						output_file=output_file, project_name=project_name, namespace=namespace, rs= rs)
-	pass

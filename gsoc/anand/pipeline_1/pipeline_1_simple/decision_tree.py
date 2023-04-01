@@ -9,8 +9,7 @@ def decision_tree(input_file, project_name, output_file="decision_tree.csv", url
     if __name__ == "__main__":
         f = open(input_file, 'r')
         lines = f.readlines()
-        pass
-    if not __name__ == "__main__":
+    if __name__ != "__main__":
         lines = integrate(namespace=namespace, uri_file=uri_file,
                           project_name=project_name, url=url)
     final_lines = []
@@ -50,10 +49,7 @@ def decision_tree(input_file, project_name, output_file="decision_tree.csv", url
         # Wrong index for range is corrected here
         rng = line[3].lower()
         lbl = line[1]
-        if 'person' in rng:
-            rng = "who"
-        else:
-            rng = "what"
+        rng = "who" if 'person' in rng else "what"
         # The total length of a row in the list is 6,
         # thus 7 and 8 are out of range values. Thus I
         # replaced it with append.
@@ -61,19 +57,19 @@ def decision_tree(input_file, project_name, output_file="decision_tree.csv", url
         line[7] = rng + " is the " + lbl + " of <X>"
         line[8] = rng + " is the " + lbl + " of <X>" 
         """
-        if(len(line) < 9):
-            line.append(rng + " is the " + lbl + " of <X>")
-            line.append(rng + " is the " + lbl + " of <X>")
+        if (len(line) < 9):
+            line.append(f"{rng} is the {lbl} of <X>")
+            line.append(f"{rng} is the {lbl} of <X>")
         else:
-            line[7] = rng + " is the " + lbl + " of <X>"
-            line[8] = rng + " is the " + lbl + " of <X>"
-        mve += rng + " is the " + lbl + " of <X>\n"
+            line[7] = f"{rng} is the {lbl} of <X>"
+            line[8] = f"{rng} is the {lbl} of <X>"
+        mve += f"{rng} is the {lbl}" + " of <X>\n"
         final_lines.append(",".join(line))
 
-    fw = open(project_name+"/"+"mve"+output_file, 'w')
+    fw = open(f"{project_name}/mve{output_file}", 'w')
     fw.write(mve)
 
-    fw2 = open(project_name+"/"+output_file, 'w')
+    fw2 = open(f"{project_name}/{output_file}", 'w')
     fw2.write("\n".join(final_lines))
     return final_lines
 
@@ -95,4 +91,3 @@ if __name__ == "__main__":
     project_name = args.project_name
     decision_tree(input_file=input_file, output_file=output_file,
                   project_name=project_name)
-    pass

@@ -9,6 +9,7 @@ https://arxiv.org/abs/1708.07624
 Version 1.0.0
 
 """
+
 import argparse
 import random
 import os
@@ -29,8 +30,8 @@ if __name__ == '__main__':
 
     lines = int(args.lines)
     dataset_file = os.path.splitext(args.dataset)[0]
-    sparql_file = dataset_file + '.sparql'
-    en_file = dataset_file + '.en'
+    sparql_file = f'{dataset_file}.sparql'
+    en_file = f'{dataset_file}.en'
 
     random.seed()
 

@@ -22,9 +22,9 @@ def get_properties(url,  project_name="test_project", output_file = "get_propert
     if(not os.path.isdir(project_name)):
         os.makedirs(project_name)
     if multi:
-        output_file = open(project_name + "/" + output_file, 'a', encoding="utf-8")
+        output_file = open(f"{project_name}/{output_file}", 'a', encoding="utf-8")
     else:
-        output_file = open(project_name+"/" + output_file, 'w', encoding="utf-8")
+        output_file = open(f"{project_name}/{output_file}", 'w', encoding="utf-8")
     fl = 0
     accum = []
     for rows in tqdm(soup.find_all("tr")):
@@ -42,7 +42,7 @@ def get_properties(url,  project_name="test_project", output_file = "get_propert
         if rows.find_all("td")[0].find('a'):
             URL_name = ((rows.find_all("td")[0].find('a').attrs['href']))
 
-        final = name + "," + label + "," + dom + "," + rng 
+        final = f"{name},{label},{dom},{rng}"
         #+ ","+ URL_name.split(':')[-1]
         accum.append(final)
         output_file.write(final+"\n")
@@ -53,6 +53,7 @@ def get_properties(url,  project_name="test_project", output_file = "get_propert
 """
 Name, Label, Domain, Range, URL_name
 """
+
 
 if __name__ == "__main__":
     """
@@ -72,4 +73,3 @@ if __name__ == "__main__":
     output_file = args.out_put
     project_name = args.project_name
     get_properties(url = url, project_name= project_name,  output_file = output_file)
-    pass

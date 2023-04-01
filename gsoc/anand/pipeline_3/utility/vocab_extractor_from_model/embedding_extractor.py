@@ -21,34 +21,30 @@ def test_word2vec():
            model.get_embedding("assistance")
 accum = []
 with tf.Session() as sess:
-    saver = tf.train.import_meta_graph('translate.ckpt-32000.meta')
-    print("***************")
-    print(saver.restore(sess, "translate.ckpt-32000"))
-    print(tf.all_variables())
-    lis = (sess.run(('embeddings/decoder/embedding_decoder:0')))
-    print(np.shape(lis))
-    decode = open('vocab.sparql','r').readlines()
-    embed = open('embed_vocab.sparql','w')
-    if(len(decode) == np.shape(lis)[0]): 
-        for dec in range(len(decode)):
-            accum.append([decode[dec][:-1]]+list(lis[dec,:]))
-            temp = ' '.join(str(v) for v in accum[-1])
-            #print(temp)
-            embed.write(temp+'\n')
-    embed.close()
-    
-
-    lis = (sess.run(('embeddings/encoder/embedding_encoder:0')))
-    print(np.shape(lis))
-    decode = open('vocab.en','r').readlines()
-    embed = open('embed_vocab.en','w')
-    if(len(decode) == np.shape(lis)[0]): 
-        for dec in range(len(decode)):
-            accum.append([decode[dec][:-1]]+list(lis[dec,:]))
-            temp = ' '.join(str(v) for v in accum[-1])
-            #print(temp)
-            embed.write(temp+'\n')
-    embed.close()
+   saver = tf.train.import_meta_graph('translate.ckpt-32000.meta')
+   print("***************")
+   print(saver.restore(sess, "translate.ckpt-32000"))
+   print(tf.all_variables())
+   lis = (sess.run(('embeddings/decoder/embedding_decoder:0')))
+   print(np.shape(lis))
+   decode = open('vocab.sparql','r').readlines()
+   with open('embed_vocab.sparql','w') as embed:
+      if(len(decode) == np.shape(lis)[0]): 
+          for dec in range(len(decode)):
+              accum.append([decode[dec][:-1]]+list(lis[dec,:]))
+              temp = ' '.join(str(v) for v in accum[-1])
+              #print(temp)
+              embed.write(temp+'\n')
+   lis = (sess.run(('embeddings/encoder/embedding_encoder:0')))
+   print(np.shape(lis))
+   decode = open('vocab.en','r').readlines()
+   with open('embed_vocab.en','w') as embed:
+      if(len(decode) == np.shape(lis)[0]): 
+          for dec in range(len(decode)):
+              accum.append([decode[dec][:-1]]+list(lis[dec,:]))
+              temp = ' '.join(str(v) for v in accum[-1])
+              #print(temp)
+              embed.write(temp+'\n')
 
 
 

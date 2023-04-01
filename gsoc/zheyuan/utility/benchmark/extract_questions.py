@@ -47,5 +47,3 @@ if __name__ == "__main__":
     path = args.path
     questions_info, questions = read_json(path)
     print(questions_info, questions)
-    # write_to_ask(questions)
-    pass
